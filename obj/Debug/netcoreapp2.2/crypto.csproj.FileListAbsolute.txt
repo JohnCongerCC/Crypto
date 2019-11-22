@@ -1,0 +1,11 @@
+/Users/jconger/Projects/crypto/bin/Debug/netcoreapp2.2/crypto.deps.json
+/Users/jconger/Projects/crypto/bin/Debug/netcoreapp2.2/crypto.runtimeconfig.json
+/Users/jconger/Projects/crypto/bin/Debug/netcoreapp2.2/crypto.runtimeconfig.dev.json
+/Users/jconger/Projects/crypto/bin/Debug/netcoreapp2.2/crypto.dll
+/Users/jconger/Projects/crypto/bin/Debug/netcoreapp2.2/crypto.pdb
+/Users/jconger/Projects/crypto/obj/Debug/netcoreapp2.2/crypto.csprojAssemblyReference.cache
+/Users/jconger/Projects/crypto/obj/Debug/netcoreapp2.2/crypto.csproj.CoreCompileInputs.cache
+/Users/jconger/Projects/crypto/obj/Debug/netcoreapp2.2/crypto.AssemblyInfoInputs.cache
+/Users/jconger/Projects/crypto/obj/Debug/netcoreapp2.2/crypto.AssemblyInfo.cs
+/Users/jconger/Projects/crypto/obj/Debug/netcoreapp2.2/crypto.dll
+/Users/jconger/Projects/crypto/obj/Debug/netcoreapp2.2/crypto.pdb
