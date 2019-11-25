@@ -14,7 +14,7 @@ namespace crypto
             Console.WriteLine(ExpectedB64 == Base64String);
 
             //https://cryptopals.com/sets/1/challenges/2
-            string hexstring1 = "1c0111001f010100061a024b53535009181c";
+            string hexstring1  = "1c0111001f010100061a024b53535009181c";
             string hexstringOR = "686974207468652062756c6c277320657965";
             string ResultOR = FixedOR(hexstring1, hexstringOR);
             string ExpectedHex1 = "746865206b696420646f6e277420706c6179";
@@ -27,14 +27,45 @@ namespace crypto
 
         static void SingleByteXORCipher(string hexcipher)
         {
-            var bin = ConvertHexToBinary(hexcipher).ToCharArray();
-
-            char[] characters = System.Text.Encoding.ASCII.GetChars(new byte[]{2});
-            foreach (var c in characters)
+            for (int i = 0; i < 255; i++)
             {
-                Console.WriteLine(c);
+                string HEX = i.ToString("X").PadLeft(2,'0');
+                string FullHEX = FillFullHex(hexcipher.Length, HEX);
+                var Result = FixedOR(hexcipher, FullHEX);
+                Console.WriteLine(i);
+                Console.WriteLine(ConvertHexStringToAscii(Result));
             }
+        }
 
+        static string ConvertHexStringToAscii(String hexString)
+        {
+            try
+            {
+                string ascii = string.Empty;
+
+                for (int i = 0; i < hexString.Length; i += 2)
+                {
+                    String hs = string.Empty;
+
+                    hs   = hexString.Substring(i,2);
+                    uint decval =   System.Convert.ToUInt32(hs, 16);
+                    char character = System.Convert.ToChar(decval);
+                    ascii += character;
+                }
+                return ascii;
+            }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
+            return string.Empty;
+        }
+
+        static string FillFullHex(int length, string Hex)
+        {
+            var SB = new StringBuilder();
+            for (int i = 0; i < length/2; i++)
+            {
+                SB.Append(Hex);
+            }
+            return SB.ToString();
         }
         static string FixedOR(string hex1, string hex2)
         {
