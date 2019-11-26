@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text;
+using System.IO;
+
 namespace crypto
 {
     class Program
@@ -22,21 +25,71 @@ namespace crypto
 
             //https://cryptopals.com/sets/1/challenges/3
             string HexCipher = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-            SingleByteXORCipher(HexCipher);
+            string HexOfChar = SingleByteXORCipher(HexCipher).HexCipher;
+            string ExpectedHexOfChar = "58";
+            Console.WriteLine(HexOfChar == ExpectedHexOfChar);
+
+            //https://cryptopals.com/sets/1/challenges/4
+            var IndexOfRecInFile = DetectSingleCharacterXOR();
+            var ExpectedIndex = 170;
+            Console.WriteLine(IndexOfRecInFile == ExpectedIndex);
+
         }
 
-        static void SingleByteXORCipher(string hexcipher)
+        static int DetectSingleCharacterXOR()
+        {   
+            string[] lines = File.ReadAllLines(@"./4.txt", Encoding.UTF8);
+            int i = 0;
+            var ScoreList = new Dictionary<int,double>();
+            foreach (var line in lines)
+            {
+                var result = SingleByteXORCipher(line);
+                ScoreList.Add(i,result.Score);
+                i++;
+                
+            }
+            var keyOfMaxValue = ScoreList.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
+
+            //Debug info (to validate)
+            // string ValidHexFromFile = lines[keyOfMaxValue];
+            // var Score = SingleByteXORCipher(ValidHexFromFile);
+            // var FillHex = FillFullHex(ValidHexFromFile.Length, Score.HexCipher);
+            // var Result = FixedOR(ValidHexFromFile, FillHex);
+            // var Message = ConvertHexStringToAscii(Result);
+            // Console.WriteLine(Message);
+            
+            return keyOfMaxValue;
+        }
+        static CipherScore SingleByteXORCipher(string hexcipher)
         {
+            var ScoreList = new Dictionary<int,double>();
             for (int i = 0; i < 255; i++)
             {
-                string HEX = i.ToString("X").PadLeft(2,'0');
+                string HEX = ConvertIntToHex(i);
                 string FullHEX = FillFullHex(hexcipher.Length, HEX);
                 var Result = FixedOR(hexcipher, FullHEX);
-                Console.WriteLine(i);
-                Console.WriteLine(ConvertHexStringToAscii(Result));
+                
+                var Message = ConvertHexStringToAscii(Result);
+                var score = GetEnglishScore(Message);
+                ScoreList.Add(i,score);
+                
             }
+            var keyOfMaxValue = ScoreList.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
+            return new CipherScore{ HexCipher = ConvertIntToHex(keyOfMaxValue), Score = ScoreList.GetValueOrDefault(keyOfMaxValue) };
         }
-
+        static double GetEnglishScore(string Message)
+        {
+            double score = 0;
+            var character_frequencies = GetEngCharFreq();
+            var character_counts = Message.GroupBy(c => c).ToDictionary(g => g.Key, g => g.Count());
+            foreach (var CharCount in character_counts)
+            {
+                double Freq = 0;
+                if(character_frequencies.TryGetValue(CharCount.Key, out Freq))
+                    score = score + (Freq * (double)CharCount.Value);
+            }
+            return score;
+        }
         static string ConvertHexStringToAscii(String hexString)
         {
             try
@@ -105,6 +158,11 @@ namespace crypto
             );
         }
 
+        static string ConvertIntToHex(int i)
+        {
+            return i.ToString("X").PadLeft(2,'0');
+        }
+
         public static string BinaryStringToHexString(string binary)
         {
             if (string.IsNullOrEmpty(binary))
@@ -126,6 +184,40 @@ namespace crypto
             }
 
             return result.ToString().ToLower();
+        }
+
+        static Dictionary<char, double> GetEngCharFreq()
+        {
+            return new Dictionary<char,double>
+            { 
+                {'a', .08167},
+                {'b', .01492},
+                {'c', .02782}, 
+                {'d', .04253},
+                {'e', .12702}, 
+                {'f', .02228}, 
+                {'g', .02015}, 
+                {'h', .06094},
+                {'i', .06094}, 
+                {'j', .00153}, 
+                {'k', .00772}, 
+                {'l', .04025},
+                {'m', .02406}, 
+                {'n', .06749}, 
+                {'o', .07507}, 
+                {'p', .01929},
+                {'q', .00095}, 
+                {'r', .05987}, 
+                {'s', .06327}, 
+                {'t', .09056},
+                {'u', .02758}, 
+                {'v', .00978}, 
+                {'w', .02360}, 
+                {'x', .00150},
+                {'y', .01974}, 
+                {'z', .00074}, 
+                {' ', .13000}
+            };
         }
     }
 }
