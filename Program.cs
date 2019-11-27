@@ -58,7 +58,7 @@ namespace crypto
             
         }
 
-        static void BreakRepeatingKeyXOR()
+        static string BreakRepeatingKeyXOR()
         {
             string str = GetFile6();
             var ScoreList = new Dictionary<int,double>();
@@ -76,9 +76,40 @@ namespace crypto
             }
 
             var keyOfMinValue = ScoreList.Aggregate((x, y) => x.Value < y.Value ? x : y).Key;
-            var Chunks = SplitString(str, keyOfMinValue);
+            var Chunks = ChunkBy<byte>(bytes, keyOfMinValue);
+            var TransposedBlocks = Transpose(Chunks);
 
+            var SB = new StringBuilder();
+            foreach (var block in TransposedBlocks)
+            {
+                var TransHex = ConvertBytesToHexString(block);
+                var temp = SingleByteXORCipher(TransHex);
+                var temp2 = ConvertHexStringToAscii(temp.HexCipher);
+                SB.Append(temp2);
+            }
+            var RepeatingKeyXOR = SB.ToString();
+            var p =09;
+            return RepeatingKeyXOR;
         }
+
+        static List<List<byte>> Transpose(List<List<byte>> SourceBlocks)
+        {
+            return SourceBlocks
+                .SelectMany(inner => inner.Select((item, index) => new { item, index }))
+                .GroupBy(i => i.index, i => i.item)
+                .Select(g => g.ToList())
+                .ToList();
+        }
+
+        public static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize) 
+        {
+            return source
+                .Select((x, i) => new { Index = i, Value = x })
+                .GroupBy(x => x.Index / chunkSize)
+                .Select(x => x.Select(v => v.Value).ToList())
+                .ToList();
+        }
+
         static string ConvertBytesToHexString(IEnumerable<byte> bytes)
         {
             return BitConverter.ToString(bytes.ToArray()).Replace("-", string.Empty);
@@ -141,17 +172,26 @@ namespace crypto
             var ScoreList = new Dictionary<int,double>();
             for (int i = 0; i < 255; i++)
             {
-                string HEX = ConvertIntToHex(i);
-                string FullHEX = FillFullHex(hexcipher.Length, HEX);
-                var Result = FixedOR(hexcipher, FullHEX);
-                
-                var Message = ConvertHexStringToAscii(Result);
+                var Message = SingleByteXORCipher(hexcipher, i);
                 var score = GetEnglishScore(Message);
                 ScoreList.Add(i,score);
                 
             }
             var keyOfMaxValue = ScoreList.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
-            return new CipherScore{ HexCipher = ConvertIntToHex(keyOfMaxValue), Score = ScoreList.GetValueOrDefault(keyOfMaxValue) };
+            return new CipherScore
+                                {
+                                    HexCipher = ConvertIntToHex(keyOfMaxValue), 
+                                    Score = ScoreList.GetValueOrDefault(keyOfMaxValue), 
+                                    Message = SingleByteXORCipher(hexcipher, keyOfMaxValue) 
+                                };
+        }
+        static string SingleByteXORCipher(string hexcipher, int i)
+        {
+            string HEX = ConvertIntToHex(i);
+            string FullHEX = FillFullHex(hexcipher.Length, HEX);
+            var Result = FixedOR(hexcipher, FullHEX);
+                
+            return ConvertHexStringToAscii(Result);
         }
         static double GetEnglishScore(string Message)
         {
