@@ -47,6 +47,20 @@ namespace crypto
             string woka = "wokka wokka!!!";
             int HamDist = GetHammingDistance(test, woka);
             Console.WriteLine(HamDist == 37);
+
+            string str = GetFile6();
+            var pp = 0;
+            
+            
+        }
+
+        static string GetFile6()
+        {
+            string[] lines = File.ReadAllLines(@"./6.txt", Encoding.UTF8);
+            var SB = new StringBuilder();
+            foreach (var line in lines)
+                SB.Append(line);
+            return SB.ToString();
         }
 
         static int GetHammingDistance(string str1, string str2)
