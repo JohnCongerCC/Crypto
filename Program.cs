@@ -49,8 +49,11 @@ namespace crypto
             Console.WriteLine(HamDist == 37);
 
             string str = GetFile6();
-            var pp = 0;
-            
+            var KEYSIZE = 37;
+            var Chunk1 = str.Substring(0, KEYSIZE);
+            var Chunk2 = str.Substring(KEYSIZE, KEYSIZE);
+            int HamDist2 = GetHammingDistance(Chunk1, Chunk2);
+            var NormalizedHamDist = (double)HamDist2 / (double)KEYSIZE;
             
         }
 
