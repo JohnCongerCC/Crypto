@@ -12,9 +12,13 @@ namespace crypto
         {
             //https://cryptopals.com/sets/1/challenges/1
             string hexstring = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-            string Base64String = ConvertToBase64(hexstring);
+            string Base64String = ConvertHexToBase64(hexstring);
             string ExpectedB64 = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
             Console.WriteLine(ExpectedB64 == Base64String);
+
+            //Used for Challenge6
+            string b64 = ConvertBase64ToHex(ExpectedB64);
+            Console.WriteLine(b64 == hexstring);
 
             //https://cryptopals.com/sets/1/challenges/2
             string hexstring1  = "1c0111001f010100061a024b53535009181c";
@@ -45,16 +49,44 @@ namespace crypto
             //https://cryptopals.com/sets/1/challenges/6
             string test = "this is a test";
             string woka = "wokka wokka!!!";
-            int HamDist = GetHammingDistance(test, woka);
+            var TestHex = ConvertStringToHex(test);
+            var WokaHex = ConvertStringToHex(woka);
+            int HamDist = GetHammingDistance(TestHex, WokaHex);
             Console.WriteLine(HamDist == 37);
 
-            string str = GetFile6();
-            var KEYSIZE = 37;
-            var Chunk1 = str.Substring(0, KEYSIZE);
-            var Chunk2 = str.Substring(KEYSIZE, KEYSIZE);
-            int HamDist2 = GetHammingDistance(Chunk1, Chunk2);
-            var NormalizedHamDist = (double)HamDist2 / (double)KEYSIZE;
+            BreakRepeatingKeyXOR();
             
+        }
+
+        static void BreakRepeatingKeyXOR()
+        {
+            string str = GetFile6();
+            var ScoreList = new Dictionary<int,double>();
+
+            var bytes = Convert.FromBase64String(str).ToList();
+            for (int KEYSIZE = 2; KEYSIZE < 40; KEYSIZE++)
+            {
+                var Chunk1 = bytes.Take(KEYSIZE);
+                var Chunk2 = bytes.Skip(KEYSIZE).Take(KEYSIZE);
+                var Hex1 = ConvertBytesToHexString(Chunk1);
+                var Hex2 = ConvertBytesToHexString(Chunk2);
+                int HamDist2 = GetHammingDistance(Hex1, Hex2);
+                var NormalizedHamDist = (double)HamDist2 / (double)KEYSIZE;    
+                ScoreList.Add(KEYSIZE, NormalizedHamDist);
+            }
+
+            var keyOfMinValue = ScoreList.Aggregate((x, y) => x.Value < y.Value ? x : y).Key;
+            var Chunks = SplitString(str, keyOfMinValue);
+
+        }
+        static string ConvertBytesToHexString(IEnumerable<byte> bytes)
+        {
+            return BitConverter.ToString(bytes.ToArray()).Replace("-", string.Empty);
+        }
+        static IEnumerable<string> SplitString(string str, int chunkSize)
+        {
+            return Enumerable.Range(0, str.Length / chunkSize)
+                .Select(i => str.Substring(i * chunkSize, chunkSize));
         }
 
         static string GetFile6()
@@ -66,10 +98,8 @@ namespace crypto
             return SB.ToString();
         }
 
-        static int GetHammingDistance(string str1, string str2)
+        static int GetHammingDistance(string Hex1, string Hex2)
         {
-            var Hex1 = ConvertStringToHexAscii(str1);
-            var Hex2 = ConvertStringToHexAscii(str2);
             var bin1 = ConvertHexToBinary(Hex1);
             var bin2 = ConvertHexToBinary(Hex2);
             if (bin1.Length != bin2.Length) throw new IndexOutOfRangeException("hex strings need to be the same length");
@@ -148,8 +178,8 @@ namespace crypto
         }
         static string RepeatingOR(string PlainText, string key)
         {
-            var Hex1 = ConvertStringToHexAscii(PlainText);
-            var Hex2 = PadKeyToSize(ConvertStringToHexAscii(key), Hex1.Length);
+            var Hex1 = ConvertStringToHex(PlainText);
+            var Hex2 = PadKeyToSize(ConvertStringToHex(key), Hex1.Length);
             return FixedOR(Hex1, Hex2);
         }
 
@@ -184,7 +214,18 @@ namespace crypto
             string binarystring = SB.ToString();
             return(BinaryStringToHexString(binarystring));
         }
-        static string ConvertToBase64(string HexString)
+        static string ConvertBase64ToHex(string Base64string)
+        {
+            var Base64AsMultipleOfFourChars = Base64string.PadRight(Base64string.Length + (4 - Base64string.Length % 4) % 4,'=');
+            var bytes = Convert.FromBase64String(Base64AsMultipleOfFourChars);
+            var SB = new StringBuilder();
+            foreach (var b in bytes)
+                SB.Append(b.ToString("X2"));
+            
+            return SB.ToString().ToLower();
+        }
+
+        static string ConvertHexToBase64(string HexString)
         {
             var base64String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
             var base64Array = base64String.ToCharArray();
@@ -257,7 +298,7 @@ namespace crypto
             return string.Empty;
         }
 
-        public static string ConvertStringToHexAscii(string input)
+        public static string ConvertStringToHex(string input)
         {
             StringBuilder sb = new StringBuilder();
             foreach(char c in input)
