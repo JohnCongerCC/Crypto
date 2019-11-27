@@ -42,6 +42,27 @@ namespace crypto
             string ExpectedCipher = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f";
             Console.WriteLine(CipherText == ExpectedCipher);
             
+            //https://cryptopals.com/sets/1/challenges/6
+            string test = "this is a test";
+            string woka = "wokka wokka!!!";
+            int HamDist = GetHammingDistance(test, woka);
+            Console.WriteLine(HamDist == 37);
+        }
+
+        static int GetHammingDistance(string str1, string str2)
+        {
+            var Hex1 = ConvertStringToHexAscii(str1);
+            var Hex2 = ConvertStringToHexAscii(str2);
+            var bin1 = ConvertHexToBinary(Hex1);
+            var bin2 = ConvertHexToBinary(Hex2);
+            if (bin1.Length != bin2.Length) throw new IndexOutOfRangeException("hex strings need to be the same length");
+            int Diff = 0;
+            for (int i = 0; i < bin1.Length; i++)
+            {
+                if(bin1[i] != bin2[i])
+                    Diff++;
+            }
+            return Diff;
         }
 
         static int DetectSingleCharacterXOR()
