@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using CryptoTools;
 
 namespace crypto
 {
@@ -12,12 +13,12 @@ namespace crypto
         {
             //https://cryptopals.com/sets/1/challenges/1
             string hexstring = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-            string Base64String = ConvertHexToBase64(hexstring);
+            string Base64String = MyConvert.HexToBase64(hexstring);
             string ExpectedB64 = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
             Console.WriteLine(ExpectedB64 == Base64String);
 
             //Used for Challenge6
-            string b64 = ConvertBase64ToHex(ExpectedB64);
+            string b64 = MyConvert.Base64ToHex(ExpectedB64);
             Console.WriteLine(b64 == hexstring);
 
             //https://cryptopals.com/sets/1/challenges/2
@@ -49,9 +50,9 @@ namespace crypto
             //https://cryptopals.com/sets/1/challenges/6
             string test = "this is a test";
             string woka = "wokka wokka!!!";
-            var TestHex = ConvertStringToHex(test);
-            var WokaHex = ConvertStringToHex(woka);
-            int HamDist = GetHammingDistance(TestHex, WokaHex);
+            var TestHex = MyConvert.HexEncodePlainText(test);
+            var WokaHex = MyConvert.HexEncodePlainText(woka);
+            int HamDist = Stats.GetHammingDistance(TestHex, WokaHex);
             Console.WriteLine(HamDist == 37);
 
             BreakRepeatingKeyXOR();
@@ -61,30 +62,37 @@ namespace crypto
         static string BreakRepeatingKeyXOR()
         {
             string str = GetFile6();
-            var ScoreList = new Dictionary<int,double>();
+            
 
+            //Step 3
+            var ScoreList = new Dictionary<int,double>();
             var bytes = Convert.FromBase64String(str).ToList();
             for (int KEYSIZE = 2; KEYSIZE < 40; KEYSIZE++)
             {
                 var Chunk1 = bytes.Take(KEYSIZE);
                 var Chunk2 = bytes.Skip(KEYSIZE).Take(KEYSIZE);
-                var Hex1 = ConvertBytesToHexString(Chunk1);
-                var Hex2 = ConvertBytesToHexString(Chunk2);
-                int HamDist2 = GetHammingDistance(Hex1, Hex2);
+                var Hex1 = MyConvert.BytesToHex(Chunk1);
+                var Hex2 = MyConvert.BytesToHex(Chunk2);
+                int HamDist2 = Stats.GetHammingDistance(Hex1, Hex2);
                 var NormalizedHamDist = (double)HamDist2 / (double)KEYSIZE;    
                 ScoreList.Add(KEYSIZE, NormalizedHamDist);
             }
 
+            //Step 4
             var keyOfMinValue = ScoreList.Aggregate((x, y) => x.Value < y.Value ? x : y).Key;
-            var Chunks = ChunkBy<byte>(bytes, keyOfMinValue);
-            var TransposedBlocks = Transpose(Chunks);
+
+            //Step 5
+            var Chunks = Util.ChunkBy<byte>(bytes, keyOfMinValue);
+
+            //Step 6
+            var TransposedBlocks = Util.Transpose(Chunks);
 
             var SB = new StringBuilder();
             foreach (var block in TransposedBlocks)
             {
-                var TransHex = ConvertBytesToHexString(block);
+                var TransHex = MyConvert.BytesToHex(block);
                 var temp = SingleByteXORCipher(TransHex);
-                var temp2 = ConvertHexStringToAscii(temp.HexCipher);
+                var temp2 = MyConvert.HexToAscii(temp.HexCipher);
                 SB.Append(temp2);
             }
             var RepeatingKeyXOR = SB.ToString();
@@ -92,33 +100,10 @@ namespace crypto
             return RepeatingKeyXOR;
         }
 
-        static List<List<byte>> Transpose(List<List<byte>> SourceBlocks)
-        {
-            return SourceBlocks
-                .SelectMany(inner => inner.Select((item, index) => new { item, index }))
-                .GroupBy(i => i.index, i => i.item)
-                .Select(g => g.ToList())
-                .ToList();
-        }
+  
 
-        public static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize) 
-        {
-            return source
-                .Select((x, i) => new { Index = i, Value = x })
-                .GroupBy(x => x.Index / chunkSize)
-                .Select(x => x.Select(v => v.Value).ToList())
-                .ToList();
-        }
 
-        static string ConvertBytesToHexString(IEnumerable<byte> bytes)
-        {
-            return BitConverter.ToString(bytes.ToArray()).Replace("-", string.Empty);
-        }
-        static IEnumerable<string> SplitString(string str, int chunkSize)
-        {
-            return Enumerable.Range(0, str.Length / chunkSize)
-                .Select(i => str.Substring(i * chunkSize, chunkSize));
-        }
+        
 
         static string GetFile6()
         {
@@ -129,19 +114,7 @@ namespace crypto
             return SB.ToString();
         }
 
-        static int GetHammingDistance(string Hex1, string Hex2)
-        {
-            var bin1 = ConvertHexToBinary(Hex1);
-            var bin2 = ConvertHexToBinary(Hex2);
-            if (bin1.Length != bin2.Length) throw new IndexOutOfRangeException("hex strings need to be the same length");
-            int Diff = 0;
-            for (int i = 0; i < bin1.Length; i++)
-            {
-                if(bin1[i] != bin2[i])
-                    Diff++;
-            }
-            return Diff;
-        }
+        
 
         static int DetectSingleCharacterXOR()
         {   
@@ -173,78 +146,44 @@ namespace crypto
             for (int i = 0; i < 255; i++)
             {
                 var Message = SingleByteXORCipher(hexcipher, i);
-                var score = GetEnglishScore(Message);
+                var score = Stats.GetEnglishScore(Message);
                 ScoreList.Add(i,score);
                 
             }
             var keyOfMaxValue = ScoreList.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
             return new CipherScore
                                 {
-                                    HexCipher = ConvertIntToHex(keyOfMaxValue), 
+                                    HexCipher = MyConvert.IntToHex(keyOfMaxValue), 
                                     Score = ScoreList.GetValueOrDefault(keyOfMaxValue), 
                                     Message = SingleByteXORCipher(hexcipher, keyOfMaxValue) 
                                 };
         }
         static string SingleByteXORCipher(string hexcipher, int i)
         {
-            string HEX = ConvertIntToHex(i);
-            string FullHEX = FillFullHex(hexcipher.Length, HEX);
+            string HEX = MyConvert.IntToHex(i);
+            string FullHEX = Pad.FillFullHex(hexcipher.Length, HEX);
             var Result = FixedOR(hexcipher, FullHEX);
                 
-            return ConvertHexStringToAscii(Result);
+            return MyConvert.HexToAscii(Result);
         }
-        static double GetEnglishScore(string Message)
-        {
-            double score = 0;
-            var character_frequencies = GetEngCharFreq();
-            var character_counts = Message.GroupBy(c => c).ToDictionary(g => g.Key, g => g.Count());
-            foreach (var CharCount in character_counts)
-            {
-                double Freq = 0;
-                if(character_frequencies.TryGetValue(CharCount.Key, out Freq))
-                    score = score + (Freq * (double)CharCount.Value);
-            }
-            return score;
-        }
+        
 
-        static string FillFullHex(int length, string Hex)
-        {
-            var SB = new StringBuilder();
-            for (int i = 0; i < length/2; i++)
-            {
-                SB.Append(Hex);
-            }
-            return SB.ToString();
-        }
+        
         static string RepeatingOR(string PlainText, string key)
         {
-            var Hex1 = ConvertStringToHex(PlainText);
-            var Hex2 = PadKeyToSize(ConvertStringToHex(key), Hex1.Length);
+            var Hex1 = MyConvert.HexEncodePlainText(PlainText);
+            var Hex2 = Pad.KeyToSize(MyConvert.HexEncodePlainText(key), Hex1.Length);
             return FixedOR(Hex1, Hex2);
         }
 
-        static string PadKeyToSize(string HexKey, int size)
-        {
-            var SB = new StringBuilder();
-            for (int i = 0; i < size/2; i++)
-            {
-                string Hex = GetNextHex(HexKey, i);
-                SB.Append(Hex);
-            }
-            return SB.ToString();
-        }
+        
 
-        static string GetNextHex(string HexKey, int i)
-        {
-            int HexSize = HexKey.Length / 2;
-            int Index = i % HexSize;
-            return HexKey.Substring(Index * 2, 2);
-        }
+        
         static string FixedOR(string hex1, string hex2)
         {
             var SB = new StringBuilder();
-            var bin1 = ConvertHexToBinary(hex1).ToCharArray();
-            var bin2 = ConvertHexToBinary(hex2).ToCharArray();
+            var bin1 = MyConvert.HexToBinary(hex1).ToCharArray();
+            var bin2 = MyConvert.HexToBinary(hex2).ToCharArray();
             if (bin1.Length != bin2.Length) throw new IndexOutOfRangeException("hex strings need to be the same length");
             for (int i = 0; i < bin1.Length; i++)
             {
@@ -252,132 +191,9 @@ namespace crypto
                 SB.Append(Convert.ToInt32(XOR).ToString());
             }
             string binarystring = SB.ToString();
-            return(BinaryStringToHexString(binarystring));
+            return(MyConvert.BinaryToHex(binarystring));
         }
-        static string ConvertBase64ToHex(string Base64string)
-        {
-            var Base64AsMultipleOfFourChars = Base64string.PadRight(Base64string.Length + (4 - Base64string.Length % 4) % 4,'=');
-            var bytes = Convert.FromBase64String(Base64AsMultipleOfFourChars);
-            var SB = new StringBuilder();
-            foreach (var b in bytes)
-                SB.Append(b.ToString("X2"));
-            
-            return SB.ToString().ToLower();
-        }
-
-        static string ConvertHexToBase64(string HexString)
-        {
-            var base64String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-            var base64Array = base64String.ToCharArray();
-            var SB = new StringBuilder();
-            string binarystring = ConvertHexToBinary(HexString);
-            int six = 6;
-            var Sextets = Enumerable.Range(0, binarystring.Length / six).Select(i => binarystring.Substring(i * six, six));
-            foreach (var binary in Sextets)
-            {
-                int Decimal = Convert.ToInt32(binary, 2);
-                SB.Append(base64Array[Decimal]);
-            }
-            return(SB.ToString());
-        }
-
-        static string ConvertHexToBinary(string HexString)
-        {
-            return String.Join(String.Empty,  HexString
-                .Select(c => Convert.ToString(Convert.ToInt32(c.ToString(), 16), 2).PadLeft(4, '0')
-                )
-            );
-        }
-
-        static string ConvertIntToHex(int i)
-        {
-            return i.ToString("X").PadLeft(2,'0');
-        }
-
-        public static string BinaryStringToHexString(string binary)
-        {
-            if (string.IsNullOrEmpty(binary))
-                return binary;
-
-            StringBuilder result = new StringBuilder(binary.Length / 8 + 1);
-
-            int mod4Len = binary.Length % 8;
-            if (mod4Len != 0)
-            {
-                // pad to length multiple of 8
-                binary = binary.PadLeft(((binary.Length / 8) + 1) * 8, '0');
-            }
-
-            for (int i = 0; i < binary.Length; i += 8)
-            {
-                string eightBits = binary.Substring(i, 8);
-                result.AppendFormat("{0:X2}", Convert.ToByte(eightBits, 2));
-            }
-
-            return result.ToString().ToLower();
-        }
-
-        static string ConvertHexStringToAscii(String hexString)
-        {
-            try
-            {
-                string ascii = string.Empty;
-
-                for (int i = 0; i < hexString.Length; i += 2)
-                {
-                    String hs = string.Empty;
-
-                    hs   = hexString.Substring(i,2);
-                    uint decval =   System.Convert.ToUInt32(hs, 16);
-                    char character = System.Convert.ToChar(decval);
-                    ascii += character;
-                }
-                return ascii;
-            }
-            catch (Exception ex) { Console.WriteLine(ex.Message); }
-            return string.Empty;
-        }
-
-        public static string ConvertStringToHex(string input)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach(char c in input)
-                sb.AppendFormat("{0:X2}", (int)c);
-            return sb.ToString().Trim();
-        }
-
-        static Dictionary<char, double> GetEngCharFreq()
-        {
-            return new Dictionary<char,double>
-            { 
-                {'a', .08167},
-                {'b', .01492},
-                {'c', .02782}, 
-                {'d', .04253},
-                {'e', .12702}, 
-                {'f', .02228}, 
-                {'g', .02015}, 
-                {'h', .06094},
-                {'i', .06094}, 
-                {'j', .00153}, 
-                {'k', .00772}, 
-                {'l', .04025},
-                {'m', .02406}, 
-                {'n', .06749}, 
-                {'o', .07507}, 
-                {'p', .01929},
-                {'q', .00095}, 
-                {'r', .05987}, 
-                {'s', .06327}, 
-                {'t', .09056},
-                {'u', .02758}, 
-                {'v', .00978}, 
-                {'w', .02360}, 
-                {'x', .00150},
-                {'y', .01974}, 
-                {'z', .00074}, 
-                {' ', .13000}
-            };
-        }
+        
+        
     }
 }
