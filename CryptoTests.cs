@@ -109,12 +109,28 @@ namespace crypto
         }
 
         [Test]
-        public void FixedOR_String_Test()
+        public void FixedOR_String_Short_Test()
         {
             //https://trustedsignal.blogspot.com/2015/06/xord-play-normalized-hamming-distance.html
             string str = "fuse fuel";
             string key = "few";
             var ExpectedResult = new byte[] { 000, 016, 004, 003,069,017,019,000,027 };
+
+            var Result = XOR.SingleByteXOR_String(str, key);
+            
+            for (int i = 0; i < Result.Count(); i++)
+            {
+                Assert.AreEqual(Result[i], ExpectedResult[i]);
+            }
+        }
+
+        [Test]
+        public void FixedOR_String_Long_Test()
+        {
+            //https://trustedsignal.blogspot.com/2015/06/xord-play-normalized-hamming-distance.html
+            string str = "fuse fuel for falling flocks";
+            string key = "few";
+            var ExpectedResult = new byte[] { 000,016,004,003,069,017,019,000,027,070,003,024,020,069,017,007,009,027,015,011,016,070,003,027,009,006,028,021 };
 
             var Result = XOR.SingleByteXOR_String(str, key);
             
