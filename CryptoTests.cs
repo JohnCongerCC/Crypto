@@ -99,6 +99,31 @@ namespace crypto
             XOR.BreakRepeatingKeyXOR(str);
         }
 
+        [Test]
+        public void GetHammingDistanceDictionary_Test()
+        {
+            //https://trustedsignal.blogspot.com/2015/06/xord-play-normalized-hamming-distance.html
+            string str = "fuse fuel for falling flocks";
+            var result = XOR.GetHammingDistances(str, 2, 9);
+            
+        }
+
+        [Test]
+        public void FixedOR_String_Test()
+        {
+            //https://trustedsignal.blogspot.com/2015/06/xord-play-normalized-hamming-distance.html
+            string str = "fuse fuel";
+            string key = "few";
+            var ExpectedResult = new byte[] { 000, 016, 004, 003,069,017,019,000,027 };
+
+            var Result = XOR.SingleByteXOR_String(str, key);
+            
+            for (int i = 0; i < Result.Count(); i++)
+            {
+                Assert.AreEqual(Result[i], ExpectedResult[i]);
+            }
+        }
+
         static string GetFile6()
         {
             string[] lines = File.ReadAllLines(@"./6.txt", Encoding.UTF8);

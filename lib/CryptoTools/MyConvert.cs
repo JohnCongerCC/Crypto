@@ -75,6 +75,11 @@ namespace CryptoTools
             return result.ToString().ToLower();
         }   
 
+        public static byte[] StringToAscii(string str)
+        {
+            return Encoding.ASCII.GetBytes(str);
+        }
+
         public static string HexToAscii(String hexString)
         {
             try
@@ -103,5 +108,13 @@ namespace CryptoTools
                 sb.AppendFormat("{0:X2}", (int)c);
             return sb.ToString().Trim();
         }
+
+        public static byte[] HexToByteArray(string hex) 
+        {
+            return Enumerable.Range(0, hex.Length)
+                .Where(x => x % 2 == 0)
+                .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                .ToArray();
+        }   
     }
 }
