@@ -3,10 +3,11 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace CryptoTools
 {
-    public static class XOR
+    public static class MyCrypto
     {
         public static MessageIndex DetectSingleCharacterXOR(string[] lines)
         {   
@@ -91,7 +92,7 @@ namespace CryptoTools
             var Hex1 = MyConvert.HexEncodePlainText(str);
             var HexKey = MyConvert.HexEncodePlainText(key);
             var Hex2 = Pad.KeyToSize(HexKey, Hex1.Length);
-            var HexResult = XOR.FixedXOR(Hex1, Hex2);
+            var HexResult = MyCrypto.FixedXOR(Hex1, Hex2);
             var Result = MyConvert.HexToByteArray(HexResult);
             return Result;
         }
@@ -122,6 +123,21 @@ namespace CryptoTools
             var RepeatingKeyXOR = SB.ToString();
             
             return RepeatingKeyXOR;
+        }
+
+        public static byte[] AESDecrypt(byte[] data, byte[] key)
+        {
+            MemoryStream ms = new MemoryStream();
+            RijndaelManaged AES = new RijndaelManaged();
+            AES.Mode = CipherMode.ECB;
+            AES.Key = key;
+            
+            CryptoStream cs = new CryptoStream(ms, AES.CreateDecryptor(), CryptoStreamMode.Write);
+            cs.Write(data, 0, data.Length);
+            cs.Close();
+
+            byte[] decryptedData = ms.ToArray();
+            return decryptedData;
         }
     }
 }
