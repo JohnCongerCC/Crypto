@@ -71,11 +71,11 @@ namespace CryptoTools
             return FixedXOR(Hex1, Hex2);
         }
         
-        public static string FixedXOR(string hex1, string hex2)
+        public static string FixedXOR(string Text, string Key)
         {
             var SB = new StringBuilder();
-            var bin1 = MyConvert.HexToBinary(hex1).ToCharArray();
-            var bin2 = MyConvert.HexToBinary(hex2).ToCharArray();
+            var bin1 = MyConvert.HexToBinary(Text).ToCharArray();
+            var bin2 = MyConvert.HexToBinary(Key).ToCharArray();
             if (bin1.Length != bin2.Length) throw new IndexOutOfRangeException("hex strings need to be the same length");
             for (int i = 0; i < bin1.Length; i++)
             {
@@ -100,7 +100,7 @@ namespace CryptoTools
         {
             //Step 3
             var bytes = Convert.FromBase64String(str).ToList();
-            var ScoreList = GetHammingDistances(bytes, 2, 40);
+            var ScoreList = Stats.GetHammingDistances(bytes, 2, 40);
             
             //Step 4
             var keyOfMinValue = ScoreList.Aggregate((x, y) => x.Value < y.Value ? x : y).Key;
@@ -122,33 +122,6 @@ namespace CryptoTools
             var RepeatingKeyXOR = SB.ToString();
             
             return RepeatingKeyXOR;
-        }
-
-        public static Dictionary<int, double> GetHammingDistances(List<byte> bytes, int start, int end)
-        {
-            var ScoreList = new Dictionary<int,double>();
-
-            for (int KEYSIZE = start; KEYSIZE < end; KEYSIZE++)
-            {
-                var ListOfHamDist = new List<double>();
-                for (int i = 0; i < bytes.Count(); i++)
-                {
-                    var SkipAmount = i * KEYSIZE;
-                    if(SkipAmount + (KEYSIZE * 2) <= bytes.Count())
-                    {
-                        var Chunk1 = bytes.Skip(SkipAmount).Take(KEYSIZE);
-                        var Chunk2 = bytes.Skip(SkipAmount + KEYSIZE).Take(KEYSIZE);
-                        var Hex1 = MyConvert.BytesToHex(Chunk1);
-                        var Hex2 = MyConvert.BytesToHex(Chunk2);
-                        int HamDist = Stats.GetHammingDistance(Hex1, Hex2);
-                        ListOfHamDist.Add((double)HamDist);
-                    }
-                }
-                var AverageHamDist = ListOfHamDist.Average();
-                var NormalizedHamDist = (double)AverageHamDist / (double)KEYSIZE;    
-                ScoreList.Add(KEYSIZE, NormalizedHamDist);
-            }
-            return ScoreList;
         }
     }
 }

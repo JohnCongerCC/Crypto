@@ -20,6 +20,33 @@ namespace CryptoTools
             return Diff;
         }
 
+        public static Dictionary<int, double> GetHammingDistances(List<byte> bytes, int start, int end)
+        {
+            var ScoreList = new Dictionary<int,double>();
+
+            for (int KEYSIZE = start; KEYSIZE < end; KEYSIZE++)
+            {
+                var ListOfHamDist = new List<double>();
+                for (int i = 0; i < bytes.Count(); i++)
+                {
+                    var SkipAmount = i * KEYSIZE;
+                    if(SkipAmount + (KEYSIZE * 2) <= bytes.Count())
+                    {
+                        var Chunk1 = bytes.Skip(SkipAmount).Take(KEYSIZE);
+                        var Chunk2 = bytes.Skip(SkipAmount + KEYSIZE).Take(KEYSIZE);
+                        var Hex1 = MyConvert.BytesToHex(Chunk1);
+                        var Hex2 = MyConvert.BytesToHex(Chunk2);
+                        int HamDist = Stats.GetHammingDistance(Hex1, Hex2);
+                        ListOfHamDist.Add((double)HamDist);
+                    }
+                }
+                var AverageHamDist = ListOfHamDist.Average();
+                var NormalizedHamDist = (double)AverageHamDist / (double)KEYSIZE;    
+                ScoreList.Add(KEYSIZE, NormalizedHamDist);
+            }
+            return ScoreList;
+        }
+
         public static double GetEnglishScore(string Message)
         {
             double score = 0;

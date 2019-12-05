@@ -33,16 +33,17 @@ namespace crypto
         }
 
         [Test]
-        public void FixedXOR_Test()
+        public void FixedXOR_Test1()
         {
             //https://cryptopals.com/sets/1/challenges/2
                     
-            string hexstring1  = "1c0111001f010100061a024b53535009181c";
-            string hexstringOR = "686974207468652062756c6c277320657965";
-            string ResultOR = XOR.FixedXOR(hexstring1, hexstringOR);
-            string ExpectedHex1 = "746865206b696420646f6e277420706c6179";
-            Assert.IsTrue(ResultOR == ExpectedHex1);
+            string Encrypted  = "1c0111001f010100061a024b53535009181c";  //Encrypted Text
+            string HexEncodedKey = "686974207468652062756c6c277320657965";  //hit the bull's eye
+            string ResultOR = XOR.FixedXOR(Encrypted, HexEncodedKey);
+            string Decrypted = "746865206b696420646f6e277420706c6179";  //the kid don't play
+            Assert.IsTrue(ResultOR == Decrypted);
         }
+
 
         [Test]
         public void SingleByteXORCipher_Test()
@@ -101,7 +102,18 @@ namespace crypto
             Assert.IsTrue(Expected == result);
         }
 
-        
+         [Test]
+        public void FixedXOR_Test2()
+        {
+            //https://cryptopals.com/sets/1/challenges/6
+            string str = GetFile6();
+            string HextoDecrypt = MyConvert.Base64ToHex(str);
+            var Key = "Terminator X: Bring the noise";
+            var HexKey = Pad.KeyToSize(MyConvert.HexEncodePlainText(Key), HextoDecrypt.Length);
+            var DecryptedHex = XOR.FixedXOR(HextoDecrypt, HexKey);
+            var Plain = MyConvert.HexToAscii(DecryptedHex);
+            Assert.IsTrue("I'm back and I'm ringin' " == Plain.Substring(0,25));
+        }
 
         [Test]
         public void FixedOR_String_Short_Test()
@@ -158,9 +170,9 @@ namespace crypto
             };
 
             var bytes = XOR.SingleByteXOR_String(str, key);
-            var ScoreList = XOR.GetHammingDistances(bytes.ToList(), 2, 14);
+            var ScoreList = Stats.GetHammingDistances(bytes.ToList(), 2, 14);
             for (int i = 2; i < 14; i++)
-            {
+            {   //Assert within a rounded range b/c of doubles (close enough)
                 Assert.That(Math.Abs(ScoreList[i] - ExpectedResults[i]), Is.LessThan(0.00001D));
             }
         }
