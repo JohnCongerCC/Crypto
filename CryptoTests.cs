@@ -141,8 +141,28 @@ namespace crypto
             //https://trustedsignal.blogspot.com/2015/06/xord-play-normalized-hamming-distance.html
             string str = "fuse fuel for falling flocks";
             string key = "few";
+            var ExpectedResults = new Dictionary<int, double> { 
+                {2,2.88461538461538},
+                {3,2.54166666666667},
+                {4,3.08333333333333},
+                {5,2.65},
+                {6,2.44444444444444},
+                {7,2.80952380952381},
+                {8,2.8125},
+                {9,2.22222222222222},
+                {10,2.6},
+                {11,2.18181818181818},
+                {12,2.16666666666667},
+                {13,2.61538461538462},
+                {14,2.71428571428571}
+            };
 
-            var Result = XOR.SingleByteXOR_String(str, key);
+            var bytes = XOR.SingleByteXOR_String(str, key);
+            var ScoreList = XOR.GetHammingDistances(bytes.ToList(), 2, 14);
+            for (int i = 2; i < 14; i++)
+            {
+                Assert.That(Math.Abs(ScoreList[i] - ExpectedResults[i]), Is.LessThan(0.00001D));
+            }
         }
 
         static string GetFile6()
