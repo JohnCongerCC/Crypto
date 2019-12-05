@@ -1,4 +1,4 @@
-# ToDoList
+# Crypto
 The purpose of this app is to demo the implementation of https://cryptopals.com/sets/1/
 
 ## To begin using this repo 
