@@ -100,7 +100,7 @@ namespace CryptoTools
         {
             //Step 3
             var bytes = Convert.FromBase64String(str).ToList();
-            var ScoreList = GetHammingDistances(str, 2, 40);
+            var ScoreList = GetHammingDistances(bytes, 2, 40);
             
             //Step 4
             var keyOfMinValue = ScoreList.Aggregate((x, y) => x.Value < y.Value ? x : y).Key;
@@ -124,18 +124,28 @@ namespace CryptoTools
             return RepeatingKeyXOR;
         }
 
-        public static Dictionary<int, double> GetHammingDistances(string str, int start, int end)
+        public static Dictionary<int, double> GetHammingDistances(List<byte> bytes, int start, int end)
         {
             var ScoreList = new Dictionary<int,double>();
-            var bytes = Convert.FromBase64String(str).ToList();
+
             for (int KEYSIZE = start; KEYSIZE < end; KEYSIZE++)
             {
-                var Chunk1 = bytes.Take(KEYSIZE);
-                var Chunk2 = bytes.Skip(KEYSIZE).Take(KEYSIZE);
-                var Hex1 = MyConvert.BytesToHex(Chunk1);
-                var Hex2 = MyConvert.BytesToHex(Chunk2);
-                int HamDist2 = Stats.GetHammingDistance(Hex1, Hex2);
-                var NormalizedHamDist = (double)HamDist2 / (double)KEYSIZE;    
+                var ListOfHamDist = new List<double>();
+                for (int i = 0; i < bytes.Count(); i++)
+                {
+                    var SkipAmount = i * KEYSIZE;
+                    if(SkipAmount + (KEYSIZE * 2) <= bytes.Count())
+                    {
+                        var Chunk1 = bytes.Skip(SkipAmount).Take(KEYSIZE);
+                        var Chunk2 = bytes.Skip(SkipAmount + KEYSIZE).Take(KEYSIZE);
+                        var Hex1 = MyConvert.BytesToHex(Chunk1);
+                        var Hex2 = MyConvert.BytesToHex(Chunk2);
+                        int HamDist = Stats.GetHammingDistance(Hex1, Hex2);
+                        ListOfHamDist.Add((double)HamDist);
+                    }
+                }
+                var AverageHamDist = ListOfHamDist.Average();
+                var NormalizedHamDist = (double)AverageHamDist / (double)KEYSIZE;    
                 ScoreList.Add(KEYSIZE, NormalizedHamDist);
             }
             return ScoreList;

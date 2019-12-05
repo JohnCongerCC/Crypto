@@ -99,14 +99,7 @@ namespace crypto
             XOR.BreakRepeatingKeyXOR(str);
         }
 
-        [Test]
-        public void GetHammingDistanceDictionary_Test()
-        {
-            //https://trustedsignal.blogspot.com/2015/06/xord-play-normalized-hamming-distance.html
-            string str = "fuse fuel for falling flocks";
-            var result = XOR.GetHammingDistances(str, 2, 9);
-            
-        }
+        
 
         [Test]
         public void FixedOR_String_Short_Test()
@@ -138,6 +131,16 @@ namespace crypto
             {
                 Assert.AreEqual(Result[i], ExpectedResult[i]);
             }
+        }
+
+        [Test]
+        public void HammingDistance_Test()
+        {
+            //https://trustedsignal.blogspot.com/2015/06/xord-play-normalized-hamming-distance.html
+            string str = "fuse fuel for falling flocks";
+            string key = "few";
+
+            var Result = XOR.SingleByteXOR_String(str, key);
         }
 
         static string GetFile6()
