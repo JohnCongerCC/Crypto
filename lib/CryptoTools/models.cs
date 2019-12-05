@@ -2,10 +2,10 @@ using System;
 
 namespace CryptoTools
 {
-    public class CipherScore
+    public class MessageScore
     {
         public double Score { get; set; }
-        public string HexCipher { get; set; }
+        public string Hex { get; set; }
         public string Message {get; set;}
     }
     public class MessageIndex

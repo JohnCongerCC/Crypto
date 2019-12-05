@@ -15,7 +15,7 @@ namespace CryptoTools
 
             foreach (var line in lines)
             {
-                var result = SingleByteXORCipher(line);
+                var result = SingleByteXOR(line);
                 ScoreList.Add(i,result.Score);
                 i++;
                 
@@ -24,19 +24,19 @@ namespace CryptoTools
             var keyOfMaxValue = ScoreList.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
             
             string ValidHexFromFile = lines[keyOfMaxValue];
-            var Score = SingleByteXORCipher(ValidHexFromFile);
-            var FillHex = Pad.FillFullHex(ValidHexFromFile.Length, Score.HexCipher);
+            var Score = SingleByteXOR(ValidHexFromFile);
+            var FillHex = Pad.FillFullHex(ValidHexFromFile.Length, Score.Hex);
             var Result = FixedXOR(ValidHexFromFile, FillHex);
             var message = MyConvert.HexToAscii(Result);
             
             return new MessageIndex{ Index= keyOfMaxValue, Message = message };
         }
-        public static CipherScore SingleByteXORCipher(string hexcipher)
+        public static MessageScore SingleByteXOR(string HEX)
         {
             var ScoreList = new Dictionary<int,double>();
             for (int i = 0; i < 255; i++)
             {
-                var Message = SingleByteXORCipher(hexcipher, i);
+                var Message = SingleByteXOR(HEX, i);
                 var score = Stats.GetEnglishScore(Message);
                 ScoreList.Add(i,score);
                 
@@ -46,20 +46,20 @@ namespace CryptoTools
             double MaxScore = 0;
             if(ScoreList.TryGetValue(keyOfMaxValue, out MaxScore))
             {
-                return new CipherScore
+                return new MessageScore
                 {
-                    HexCipher = MyConvert.IntToHex(keyOfMaxValue), 
+                    Hex = MyConvert.IntToHex(keyOfMaxValue), 
                     Score = MaxScore,
-                    Message = SingleByteXORCipher(hexcipher, keyOfMaxValue) 
+                    Message = SingleByteXOR(HEX, keyOfMaxValue) 
                 };
             }
             else return null;
         }
-        static string SingleByteXORCipher(string hexcipher, int i)
+        static string SingleByteXOR(string Hex, int i)
         {
             string HEX = MyConvert.IntToHex(i);
-            string FullHEX = Pad.FillFullHex(hexcipher.Length, HEX);
-            var Result = FixedXOR(hexcipher, FullHEX);
+            string FullHEX = Pad.FillFullHex(Hex.Length, HEX);
+            var Result = FixedXOR(Hex, FullHEX);
                 
             return MyConvert.HexToAscii(Result);
         }
@@ -115,9 +115,9 @@ namespace CryptoTools
             foreach (var block in TransposedBlocks)
             {
                 var TransHex = MyConvert.BytesToHex(block);
-                var temp = SingleByteXORCipher(TransHex);
-                var temp2 = MyConvert.HexToAscii(temp.HexCipher);
-                SB.Append(temp2);
+                var score = SingleByteXOR(TransHex);
+                var Hex = MyConvert.HexToAscii(score.Hex);
+                SB.Append(Hex);
             }
             var RepeatingKeyXOR = SB.ToString();
             
