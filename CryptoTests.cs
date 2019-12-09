@@ -102,6 +102,8 @@ namespace crypto
             Assert.IsTrue(Expected == result);
         }
 
+        
+
         [Test]
         public void FixedXOR_Test2()
         {
@@ -116,8 +118,9 @@ namespace crypto
         }
 
         [Test]
-        public void AESinECB_Test2()
+        public void AESinECB_Test()
         {
+            //https://cryptopals.com/sets/1/challenges/7
             string str = GetFile(7);  
             string Hex = MyConvert.Base64ToHex(str); 
             var bytes = MyConvert.HexToByteArray(Hex);
@@ -130,6 +133,17 @@ namespace crypto
             var HexResult = MyConvert.BytesToHex(result);
             var Plain = MyConvert.HexToAscii(HexResult);
             Assert.IsTrue("I'm back and I'm ringin' " == Plain.Substring(0,25));
+        }
+        
+        [Test]
+        public void DetectAES_ECB_Test()
+        {
+            //https://cryptopals.com/sets/1/challenges/8
+            string str = GetFile(8); 
+            var Chunks = Util.Split(str, 32);
+            var Duplicates = Chunks.GroupBy(x => x).Where(g => g.Count() > 1).Select(s => s.Key).ToList();
+           
+            var bytes = MyConvert.HexToByteArray(Duplicates.First());
         }
 
         [Test]
@@ -202,5 +216,6 @@ namespace crypto
                 SB.Append(line);
             return SB.ToString();
         }
+
     }
 }

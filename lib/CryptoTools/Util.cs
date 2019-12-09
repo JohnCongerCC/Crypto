@@ -24,5 +24,11 @@ namespace CryptoTools
                 .Select(x => x.Select(v => v.Value).ToList())
                 .ToList();
         }
+
+        public static IEnumerable<string> Split(string str, int chunkSize)
+        {
+            return Enumerable.Range(0, str.Length / chunkSize)
+                .Select(i => str.Substring(i * chunkSize, chunkSize));
+        }
     }
 }

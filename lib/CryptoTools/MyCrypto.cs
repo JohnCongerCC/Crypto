@@ -56,6 +56,7 @@ namespace CryptoTools
             }
             else return null;
         }
+
         static string SingleByteXOR(string Hex, int i)
         {
             string HEX = MyConvert.IntToHex(i);
@@ -125,12 +126,15 @@ namespace CryptoTools
             return RepeatingKeyXOR;
         }
 
+        
+
         public static byte[] AESDecrypt(byte[] data, byte[] key)
         {
             MemoryStream ms = new MemoryStream();
             RijndaelManaged AES = new RijndaelManaged();
             AES.Mode = CipherMode.ECB;
             AES.Key = key;
+            AES.Padding = PaddingMode.None;
             
             CryptoStream cs = new CryptoStream(ms, AES.CreateDecryptor(), CryptoStreamMode.Write);
             cs.Write(data, 0, data.Length);
