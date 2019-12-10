@@ -143,5 +143,21 @@ namespace CryptoTools
             byte[] decryptedData = ms.ToArray();
             return decryptedData;
         }
+
+        public static byte[] AESEncrypt(byte[] data, byte[] key)
+        {
+            MemoryStream ms = new MemoryStream();
+            RijndaelManaged AES = new RijndaelManaged();
+            AES.Mode = CipherMode.ECB;
+            AES.Key = key;
+            AES.Padding = PaddingMode.None;
+            
+            CryptoStream cs = new CryptoStream(ms, AES.CreateEncryptor(), CryptoStreamMode.Write);
+            cs.Write(data, 0, data.Length);
+            cs.Close();
+
+            byte[] decryptedData = ms.ToArray();
+            return decryptedData;
+        }
     }
 }

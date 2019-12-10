@@ -118,7 +118,7 @@ namespace crypto
         }
 
         [Test]
-        public void AESinECB_Test()
+        public void AESinECB_Test()  //ECB = Electronic Codebook
         {
             //https://cryptopals.com/sets/1/challenges/7
             string str = Util.GetFile(7);  
@@ -136,7 +136,7 @@ namespace crypto
         }
         
         [Test]
-        public void DetectAES_ECB_Test()
+        public void DetectAES_ECB_Test()  //ECB = Electronic Codebook
         {
             //https://cryptopals.com/sets/1/challenges/8
             string str = Util.GetFile(8); 
@@ -144,6 +144,10 @@ namespace crypto
             var Duplicates = Chunks.GroupBy(x => x).Where(g => g.Count() > 1).Select(s => s.Key).ToList();
            
             var bytes = MyConvert.HexToByteArray(Duplicates.First());
+            var Hex = MyConvert.BytesToHex(bytes);
+            var B64 = MyConvert.HexToBase64(Hex);
+
+            Assert.IsTrue("CGSa9w3Ab0/V0tacdEzSg" == B64);
         }
 
         [Test]
