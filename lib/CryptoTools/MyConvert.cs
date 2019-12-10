@@ -75,7 +75,7 @@ namespace CryptoTools
             return result.ToString().ToLower();
         }   
 
-        public static byte[] StringToAscii(string str)
+        public static byte[] TextToByteArray(string str)
         {
             return Encoding.ASCII.GetBytes(str);
         }

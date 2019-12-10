@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace CryptoTools
 {
@@ -29,6 +30,14 @@ namespace CryptoTools
         {
             return Enumerable.Range(0, str.Length / chunkSize)
                 .Select(i => str.Substring(i * chunkSize, chunkSize));
+        }
+        public static string GetFile(int i)
+        {
+            string[] lines = File.ReadAllLines(@"./"+i+".txt", Encoding.UTF8);
+            var SB = new StringBuilder();
+            foreach (var line in lines)
+                SB.Append(line);
+            return SB.ToString();
         }
     }
 }

@@ -26,7 +26,7 @@ namespace CryptoTools
             
             string ValidHexFromFile = lines[keyOfMaxValue];
             var Score = SingleByteXOR(ValidHexFromFile);
-            var FillHex = Pad.FillFullHex(ValidHexFromFile.Length, Score.Hex);
+            var FillHex = Pad.PadHex(ValidHexFromFile.Length, Score.Hex);
             var Result = FixedXOR(ValidHexFromFile, FillHex);
             var message = MyConvert.HexToAscii(Result);
             
@@ -60,7 +60,7 @@ namespace CryptoTools
         static string SingleByteXOR(string Hex, int i)
         {
             string HEX = MyConvert.IntToHex(i);
-            string FullHEX = Pad.FillFullHex(Hex.Length, HEX);
+            string FullHEX = Pad.PadHex(Hex.Length, HEX);
             var Result = FixedXOR(Hex, FullHEX);
                 
             return MyConvert.HexToAscii(Result);
@@ -69,7 +69,7 @@ namespace CryptoTools
         public static string RepeatingXOR(string PlainText, string key)
         {
             var Hex1 = MyConvert.HexEncodePlainText(PlainText);
-            var Hex2 = Pad.KeyToSize(MyConvert.HexEncodePlainText(key), Hex1.Length);
+            var Hex2 = Pad.PadKey(MyConvert.HexEncodePlainText(key), Hex1.Length);
             return FixedXOR(Hex1, Hex2);
         }
         
@@ -92,7 +92,7 @@ namespace CryptoTools
         {
             var Hex1 = MyConvert.HexEncodePlainText(str);
             var HexKey = MyConvert.HexEncodePlainText(key);
-            var Hex2 = Pad.KeyToSize(HexKey, Hex1.Length);
+            var Hex2 = Pad.PadKey(HexKey, Hex1.Length);
             var HexResult = MyCrypto.FixedXOR(Hex1, Hex2);
             var Result = MyConvert.HexToByteArray(HexResult);
             return Result;

@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace crypto
 {
     [TestFixture]
-    class CryptoTests
+    class Set1Tests
     {
         [Test]
         public void HexToBase64_Test()
@@ -96,7 +96,7 @@ namespace crypto
         public void BreakRepeatingKeyXOR_Test()
         {
             //https://cryptopals.com/sets/1/challenges/6
-            string str = GetFile(6);
+            string str = Util.GetFile(6);
             var Expected = "Terminator X: Bring the noise";
             var result = MyCrypto.BreakRepeatingKeyXOR(str);
             Assert.IsTrue(Expected == result);
@@ -108,10 +108,10 @@ namespace crypto
         public void FixedXOR_Test2()
         {
             //https://cryptopals.com/sets/1/challenges/6
-            string str = GetFile(6);
+            string str = Util.GetFile(6);
             string HextoDecrypt = MyConvert.Base64ToHex(str);
             var Key = "Terminator X: Bring the noise";
-            var HexKey = Pad.KeyToSize(MyConvert.HexEncodePlainText(Key), HextoDecrypt.Length);
+            var HexKey = Pad.PadKey(MyConvert.HexEncodePlainText(Key), HextoDecrypt.Length);
             var DecryptedHex = MyCrypto.FixedXOR(HextoDecrypt, HexKey);
             var Plain = MyConvert.HexToAscii(DecryptedHex);
             Assert.IsTrue("I'm back and I'm ringin' " == Plain.Substring(0,25));
@@ -121,7 +121,7 @@ namespace crypto
         public void AESinECB_Test()
         {
             //https://cryptopals.com/sets/1/challenges/7
-            string str = GetFile(7);  
+            string str = Util.GetFile(7);  
             string Hex = MyConvert.Base64ToHex(str); 
             var bytes = MyConvert.HexToByteArray(Hex);
 
@@ -139,7 +139,7 @@ namespace crypto
         public void DetectAES_ECB_Test()
         {
             //https://cryptopals.com/sets/1/challenges/8
-            string str = GetFile(8); 
+            string str = Util.GetFile(8); 
             var Chunks = Util.Split(str, 32);
             var Duplicates = Chunks.GroupBy(x => x).Where(g => g.Count() > 1).Select(s => s.Key).ToList();
            
@@ -208,14 +208,7 @@ namespace crypto
             }
         }
 
-        static string GetFile(int i)
-        {
-            string[] lines = File.ReadAllLines(@"./"+i+".txt", Encoding.UTF8);
-            var SB = new StringBuilder();
-            foreach (var line in lines)
-                SB.Append(line);
-            return SB.ToString();
-        }
+        
 
     }
 }
