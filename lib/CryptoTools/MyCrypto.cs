@@ -73,11 +73,11 @@ namespace CryptoTools
             return FixedXOR(Hex1, Hex2);
         }
         
-        public static string FixedXOR(string Text, string Key)
+        public static string FixedXOR(string Hex, string hexKey)
         {
             var SB = new StringBuilder();
-            var bin1 = MyConvert.HexToBinary(Text).ToCharArray();
-            var bin2 = MyConvert.HexToBinary(Key).ToCharArray();
+            var bin1 = MyConvert.HexToBinary(Hex).ToCharArray();
+            var bin2 = MyConvert.HexToBinary(hexKey).ToCharArray();
             if (bin1.Length != bin2.Length) throw new IndexOutOfRangeException("hex strings need to be the same length");
             for (int i = 0; i < bin1.Length; i++)
             {
@@ -128,7 +128,7 @@ namespace CryptoTools
 
         
 
-        public static byte[] AESDecrypt(byte[] data, byte[] key)
+        public static byte[] AES_ECB_Decrypt(byte[] data, byte[] key)
         {
             MemoryStream ms = new MemoryStream();
             RijndaelManaged AES = new RijndaelManaged();
@@ -144,7 +144,7 @@ namespace CryptoTools
             return decryptedData;
         }
 
-        public static byte[] AESEncrypt(byte[] data, byte[] key)
+        public static byte[] AES_ECB_Encrypt(byte[] data, byte[] key)
         {
             MemoryStream ms = new MemoryStream();
             RijndaelManaged AES = new RijndaelManaged();
@@ -156,8 +156,41 @@ namespace CryptoTools
             cs.Write(data, 0, data.Length);
             cs.Close();
 
-            byte[] decryptedData = ms.ToArray();
-            return decryptedData;
+            byte[] EncryptedData = ms.ToArray();
+            return EncryptedData;
+        }
+
+        public static byte[] AES_CBC_Encrypt(byte[] data, byte[] key, byte[] IV, int blocksize)
+        {
+            var SB = new StringBuilder();
+            var Chunks = Util.ChunkBy<byte>(data.ToList(), blocksize);
+
+            //Initialize ORHex to the IV (for the first iteration of the loop)
+            //See CBC in: https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
+            var ORHex = MyConvert.BytesToHex(IV);
+
+            foreach (var chunk in Chunks)
+            {
+                var EncryptedBytes = chunk.ToArray();
+                var decryptedBytes = AES_ECB_Decrypt(EncryptedBytes, key);
+                
+                var DecryptedHex = MyConvert.BytesToHex(decryptedBytes);
+                var PlainHex = FixedXOR(DecryptedHex, ORHex);
+
+                //Next ORHex will be the previous blocks encrypted Hex (used in the next iteration of the loop)
+                ORHex = MyConvert.BytesToHex(EncryptedBytes); 
+                SB.Append(PlainHex);
+
+                //Just to see Ascii of decrypted text for debugging purposes
+                var plaintext = MyConvert.HexToAscii(PlainHex);
+            }
+            
+            var DecryptedHexString = SB.ToString();
+
+            //Just to see Ascii of decrypted text for debugging purposes
+            var c = MyConvert.HexToAscii(DecryptedHexString);
+
+            return MyConvert.HexToByteArray(DecryptedHexString);
         }
     }
 }

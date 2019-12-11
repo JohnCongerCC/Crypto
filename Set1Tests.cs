@@ -129,7 +129,7 @@ namespace crypto
             string HexKey = MyConvert.HexEncodePlainText(key);
             var Keybytes = MyConvert.HexToByteArray(HexKey);
 
-            var result = MyCrypto.AESDecrypt(bytes, Keybytes);
+            var result = MyCrypto.AES_ECB_Decrypt(bytes, Keybytes);
             var HexResult = MyConvert.BytesToHex(result);
             var Plain = MyConvert.HexToAscii(HexResult);
             Assert.IsTrue("I'm back and I'm ringin' " == Plain.Substring(0,25));

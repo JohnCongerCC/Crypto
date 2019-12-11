@@ -37,10 +37,10 @@ namespace crypto
             var Keybytes = MyConvert.HexToByteArray(HexKey);
 
             //Encrypt
-            var CiperBytes = MyCrypto.AESEncrypt(PaddedBytes, Keybytes);
+            var CiperBytes = MyCrypto.AES_ECB_Encrypt(PaddedBytes, Keybytes);
           
             //Decrypt
-            var PlainBytes = MyCrypto.AESDecrypt(CiperBytes, Keybytes);
+            var PlainBytes = MyCrypto.AES_ECB_Decrypt(CiperBytes, Keybytes);
             var UnPaddedBytes = Pad.RemovePkcs7(PlainBytes); //Unpad the message
             var hexPlain = MyConvert.BytesToHex(UnPaddedBytes);
             var PlainText = MyConvert.HexToAscii(hexPlain);
@@ -51,10 +51,28 @@ namespace crypto
         [Test]
         public void Implement_CBC_mode_Test()  //CBC = Cipher Block Chaining 
         {
+            var BLOCKSIZE = 16;
+
             //https://cryptopals.com/sets/2/challenges/10
             string str = Util.GetFile(10);  
             string Hex = MyConvert.Base64ToHex(str); 
             var bytes = MyConvert.HexToByteArray(Hex);
+
+            //Initialization Vector (padded to BLOCKSIZE bytes)
+            string IVHex = Pad.PadHex(BLOCKSIZE * 2, "00");
+            var IVBytes = MyConvert.HexToByteArray(IVHex);
+
+            //The Key 
+            string key = "YELLOW SUBMARINE";
+            string HexKey = MyConvert.HexEncodePlainText(key);
+            var Keybytes = MyConvert.HexToByteArray(HexKey);
+
+            //Perform my version of CBC
+            var decryptedBytes = MyCrypto.AES_CBC_Encrypt(bytes, Keybytes, IVBytes, BLOCKSIZE);
+            var HexResult = MyConvert.BytesToHex(decryptedBytes);
+            var Plain = MyConvert.HexToAscii(HexResult);
+            Assert.IsTrue("I'm back and I'm ringin' " == Plain.Substring(0,25));
+            
         }
     }
 }
