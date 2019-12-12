@@ -160,7 +160,7 @@ namespace CryptoTools
             return EncryptedData;
         }
 
-        public static byte[] AES_CBC_Encrypt(byte[] data, byte[] key, byte[] IV, int blocksize)
+        public static byte[] AES_CBC_Decrypt(byte[] data, byte[] key, byte[] IV, int blocksize)
         {
             var SB = new StringBuilder();
             var Chunks = Util.ChunkBy<byte>(data.ToList(), blocksize);
@@ -191,6 +191,102 @@ namespace CryptoTools
             var c = MyConvert.HexToAscii(DecryptedHexString);
 
             return MyConvert.HexToByteArray(DecryptedHexString);
+        }
+
+        public static byte[] AES_CBC_Encrypt(byte[] data, byte[] key, byte[] IV, int blocksize)
+        {
+             var SB = new StringBuilder();
+            var Chunks = Util.ChunkBy<byte>(data.ToList(), blocksize);
+
+            //Initialize ORHex to the IV (for the first iteration of the loop)
+            //See CBC in: https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
+            var ORHex = MyConvert.BytesToHex(IV);
+
+            foreach (var chunk in Chunks)
+            {
+                var PlainBytes = chunk.ToArray();
+                var PlainHex = MyConvert.BytesToHex(PlainBytes);
+
+                //First XOR the bytes
+                var OredHex = FixedXOR(PlainHex, ORHex);
+                var OredBytes = MyConvert.HexToByteArray(OredHex);
+
+                //Next Encrypt with ECB the Orded Bytes
+                var EncryptedBytes = AES_ECB_Encrypt(OredBytes, key);
+                var EncryptedHex = MyConvert.BytesToHex(EncryptedBytes);
+
+                //Append Block to the larger result
+                SB.Append(EncryptedHex);
+
+                //Next ORHex will be the previous blocks encrypted Hex (used in the next iteration of the loop)
+                ORHex = EncryptedHex;
+            }
+            var EncryptedHexString = SB.ToString();
+            return MyConvert.HexToByteArray(EncryptedHexString);
+        }
+
+        public static byte[] GenerateRandomKey()
+        {
+            var result = new List<byte>();
+            for (int i = 0; i < 16; i++)
+            {
+                Random rnd = new Random();
+                int BYTE   = rnd.Next(255);
+                result.Add((byte)BYTE);
+            }
+            return result.ToArray();
+        }
+
+        public static byte[] AddBytes(string PlainText)
+        {
+            string HexPlain = MyConvert.HexEncodePlainText(PlainText);
+            string HexWithExtra = AddRandomHex(HexPlain);
+            var bytes = MyConvert.HexToByteArray(HexWithExtra);
+            return bytes;
+        }
+
+        public static string AddRandomHex(string baseHex)
+        {
+            var SB = new StringBuilder();
+            Random rnd = new Random();
+            int before = rnd.Next(5, 11);  // creates a number between 5 and 10
+            int after = rnd.Next(5, 11); 
+
+            for (int i = 0; i <= before; i++)
+                SB.Append(GetRandomhex());
+            
+            SB.Append(baseHex);
+
+            for (int i = 0; i <= after; i++)
+                SB.Append(GetRandomhex());
+
+            return SB.ToString();
+        }
+
+        public static string GetRandomhex()
+        {
+            Random rnd = new Random();
+            int BYTE   = rnd.Next(255);
+            return MyConvert.IntToHex(BYTE);
+        }
+
+        public static byte[] EncryptionOracle(string PlainText)
+        {
+            int BLOCKSIZE = 16;
+            string IVHex = Pad.PadHex(BLOCKSIZE * 2, "00");
+            var IVBytes = MyConvert.HexToByteArray(IVHex);
+
+            var KeyBytes = GenerateRandomKey();
+            var PlainTextBytesWithExtra = AddBytes(PlainText);
+
+            var PaddedBytes = Pad.AddPkcs7(PlainTextBytesWithExtra, 128);
+
+             Random rnd = new Random();
+            int SWITCH   = rnd.Next(2);
+            if (SWITCH == 0)
+                return AES_ECB_Encrypt(PaddedBytes, KeyBytes);
+            else
+                return AES_CBC_Encrypt(PaddedBytes, KeyBytes, IVBytes, BLOCKSIZE);
         }
     }
 }
