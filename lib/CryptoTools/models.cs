@@ -13,4 +13,15 @@ namespace CryptoTools
         public int Index { get; set; }
         public string Message { get; set; }
     }
+
+    public class RandomEncrypt
+    {
+        public AESEncryptionType EType { get; set; }
+        public byte[] EncryptedBytes { get; set; }
+    }
+
+    public enum AESEncryptionType
+    {
+        ECB = 0, CBC = 1
+    }
 }

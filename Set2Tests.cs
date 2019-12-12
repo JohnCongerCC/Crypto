@@ -114,8 +114,25 @@ namespace crypto
         [Test]
         public void AES_ECB_and_CBC_Oracle_Test()  
         {
-            string myInput = "I looked out the window and seen his bald head\nI ran to the fridge and pulled out an egg";
-            MyCrypto.EncryptionOracle(myInput);
+            string myInput = Util.GenerateIdenticalString('A', 100);
+            bool FoundAtLeastOne_ECB = false;
+            bool FoundAtLeastOne_CBC = false;
+
+            for (int i = 0; i < 1000; i++)
+            {
+                var Result = MyCrypto.RandomlyEncrypt(myInput);
+                var MenthodUsed = MyCrypto.Encryption_Oracle(Result.EncryptedBytes);
+                Assert.AreEqual(MenthodUsed, Result.EType);
+
+                if (MenthodUsed == AESEncryptionType.ECB)
+                    FoundAtLeastOne_ECB = true;
+
+                if (MenthodUsed == AESEncryptionType.CBC)
+                    FoundAtLeastOne_CBC = true;
+            }
+
+            Assert.IsTrue(FoundAtLeastOne_ECB);
+            Assert.IsTrue(FoundAtLeastOne_CBC);
         }
     }
 }

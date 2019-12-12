@@ -270,11 +270,10 @@ namespace CryptoTools
             return MyConvert.IntToHex(BYTE);
         }
 
-        public static byte[] EncryptionOracle(string PlainText)
+        public static RandomEncrypt RandomlyEncrypt(string PlainText)
         {
             int BLOCKSIZE = 16;
-            string IVHex = Pad.PadHex(BLOCKSIZE * 2, "00");
-            var IVBytes = MyConvert.HexToByteArray(IVHex);
+            var IVBytes = GenerateRandomKey(); //"just use random IVs each time..."
 
             var KeyBytes = GenerateRandomKey();
             var PlainTextBytesWithExtra = AddBytes(PlainText);
@@ -284,9 +283,22 @@ namespace CryptoTools
              Random rnd = new Random();
             int SWITCH   = rnd.Next(2);
             if (SWITCH == 0)
-                return AES_ECB_Encrypt(PaddedBytes, KeyBytes);
+                return new RandomEncrypt { EType = AESEncryptionType.ECB, EncryptedBytes = AES_ECB_Encrypt(PaddedBytes, KeyBytes) };
             else
-                return AES_CBC_Encrypt(PaddedBytes, KeyBytes, IVBytes, BLOCKSIZE);
+                return new RandomEncrypt { EType = AESEncryptionType.CBC, EncryptedBytes = AES_CBC_Encrypt(PaddedBytes, KeyBytes, IVBytes, BLOCKSIZE)};
         }
+
+        public static AESEncryptionType Encryption_Oracle(byte[] Cipher)
+        {
+            int BLOCKSIZE = 16;
+            var Hex = MyConvert.BytesToHex(Cipher);
+            var Chunks = Util.Split(Hex, BLOCKSIZE);
+            var Duplicates = Chunks.GroupBy(x => x).Where(g => g.Count() > 1).Select(s => s.Key).ToList();
+            if(Duplicates.Count > 0)
+                return AESEncryptionType.ECB;
+            else
+                return AESEncryptionType.CBC;
+        }
+
     }
 }

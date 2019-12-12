@@ -39,5 +39,13 @@ namespace CryptoTools
                 SB.Append(line);
             return SB.ToString();
         }
+
+        public static string GenerateIdenticalString(char c, int x)
+        {
+            var SB = new StringBuilder();
+            for (int i = 0; i < x; i++)
+                SB.Append(c);
+            return SB.ToString();
+        }   
     }
 }
