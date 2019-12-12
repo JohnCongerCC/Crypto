@@ -114,6 +114,7 @@ namespace crypto
         [Test]
         public void AES_ECB_and_CBC_Oracle_Test()  
         {
+            //https://cryptopals.com/sets/2/challenges/11
             string myInput = Util.GenerateIdenticalString('A', 100);
             bool FoundAtLeastOne_ECB = false;
             bool FoundAtLeastOne_CBC = false;
