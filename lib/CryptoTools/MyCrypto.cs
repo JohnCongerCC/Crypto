@@ -144,14 +144,14 @@ namespace CryptoTools
             return decryptedData;
         }
 
-        public static byte[] AES_ECB_Encrypt(byte[] data, byte[] key)
+        public static byte[] AES_ECB_Encrypt(byte[] data, byte[] key, PaddingMode padding = PaddingMode.None)
         {
             MemoryStream ms = new MemoryStream();
             RijndaelManaged AES = new RijndaelManaged();
             AES.Mode = CipherMode.ECB;
             AES.Key = key;
-            AES.Padding = PaddingMode.None;
-            
+            AES.Padding = padding;
+                        
             CryptoStream cs = new CryptoStream(ms, AES.CreateEncryptor(), CryptoStreamMode.Write);
             cs.Write(data, 0, data.Length);
             cs.Close();
@@ -225,18 +225,6 @@ namespace CryptoTools
             return MyConvert.HexToByteArray(EncryptedHexString);
         }
 
-        public static byte[] GenerateRandomKey()
-        {
-            var result = new List<byte>();
-            for (int i = 0; i < 16; i++)
-            {
-                Random rnd = new Random();
-                int BYTE   = rnd.Next(255);
-                result.Add((byte)BYTE);
-            }
-            return result.ToArray();
-        }
-
         public static byte[] AddBytes(string PlainText)
         {
             string HexPlain = MyConvert.HexEncodePlainText(PlainText);
@@ -273,9 +261,9 @@ namespace CryptoTools
         public static RandomEncrypt RandomlyEncrypt(string PlainText)
         {
             int BLOCKSIZE = 16;
-            var IVBytes = GenerateRandomKey(); //"just use random IVs each time..."
+            var IVBytes = Util.GenerateRandomKey(); //"just use random IVs each time..."
 
-            var KeyBytes = GenerateRandomKey();
+            var KeyBytes = Util.GenerateRandomKey();
             var PlainTextBytesWithExtra = AddBytes(PlainText);
 
             var PaddedBytes = Pad.AddPkcs7(PlainTextBytesWithExtra, 128);
@@ -298,6 +286,43 @@ namespace CryptoTools
                 return AESEncryptionType.ECB;
             else
                 return AESEncryptionType.CBC;
+        }
+
+        public static int DeterminECBBlockSize(Func<byte[], byte[], PaddingMode ,byte[]> EncryptFunction)
+        {
+            var Key = Util.GenerateRandomKey();
+            var PreviousLength = 0;
+
+            for (int i = 1; i < 256; i++)
+            {
+                var MyPlain = Util.GenerateIdenticalString('A',i);
+                var data = MyConvert.TextToByteArray(MyPlain);
+                
+                var Cipher = EncryptFunction(data, Key, PaddingMode.PKCS7);
+                                
+                if(i==1)
+                    PreviousLength = Cipher.Length;
+
+                if(Cipher.Length - PreviousLength > 2)
+                    return Cipher.Length - PreviousLength;
+
+                PreviousLength = Cipher.Length;
+            }
+
+            return -1;
+        }
+
+        public static EncryptECB EncryptECBSimple(string PlainText, string Base64PuzzleText, byte[] KeyToEncrypt)
+        {
+            var HexPuzzleText = MyConvert.Base64ToHex(Base64PuzzleText);
+            var PuzzleText = MyConvert.HexToAscii(HexPuzzleText);
+
+            var PlainAndPuzzle = PlainText + PuzzleText;
+            var HexToEncrypt = MyConvert.HexEncodePlainText(PlainAndPuzzle);
+            var BytesToEncrypt = MyConvert.HexToByteArray(HexToEncrypt);
+
+            return new EncryptECB { EncryptedBytes = AES_ECB_Encrypt(BytesToEncrypt, KeyToEncrypt) };
+            
         }
 
     }

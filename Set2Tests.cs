@@ -107,7 +107,7 @@ namespace crypto
         [Test]
         public void GetRandomKey_Test()  
         {
-            var key = MyCrypto.GenerateRandomKey();
+            var key = Util.GenerateRandomKey();
             Assert.IsTrue(key.Length == 16);
         }
 
@@ -134,6 +134,24 @@ namespace crypto
 
             Assert.IsTrue(FoundAtLeastOne_ECB);
             Assert.IsTrue(FoundAtLeastOne_CBC);
+        }
+
+        [Test]
+        public void DeterminECBBlockSize_Test()  
+        {
+            var ByteBlockSize = MyCrypto.DeterminECBBlockSize(MyCrypto.AES_ECB_Encrypt);
+            Assert.IsTrue(ByteBlockSize == 16); //AES.Blocksize is 128 bits - Assert is in bytes (16 * 8 = 128)
+            // dotnet core RijndaelManaged only works with a 128 bit blocksize, as documented here...
+            //https://stackoverflow.com/questions/52699604/how-to-use-rijndael-algorithm-with-256-long-block-size-in-dotnet-core-2-1
+        }
+
+        [Test]
+        public void EncryptECBSimple_Test()  
+        {
+            //https://cryptopals.com/sets/2/challenges/12
+            var Base64Puzzle = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK";
+
+        
         }
     }
 }

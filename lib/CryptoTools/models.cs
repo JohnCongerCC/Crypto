@@ -20,6 +20,12 @@ namespace CryptoTools
         public byte[] EncryptedBytes { get; set; }
     }
 
+    public class EncryptECB
+    {
+        
+        public byte[] EncryptedBytes { get; set; }
+    }
+
     public enum AESEncryptionType
     {
         ECB = 0, CBC = 1

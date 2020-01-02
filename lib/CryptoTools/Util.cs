@@ -47,5 +47,17 @@ namespace CryptoTools
                 SB.Append(c);
             return SB.ToString();
         }   
+
+        public static byte[] GenerateRandomKey()
+        {
+            var result = new List<byte>();
+            for (int i = 0; i < 16; i++)
+            {
+                Random rnd = new Random();
+                int BYTE   = rnd.Next(255);
+                result.Add((byte)BYTE);
+            }
+            return result.ToArray();
+        }
     }
 }
